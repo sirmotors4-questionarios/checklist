@@ -3,12 +3,10 @@
   "properties": {
     "data": { "type": "string" },
     "turno": { "type": "string" },
-    "utilizador": { "type": "string" },
     "motorista": { "type": "string" },
     "viatura": { "type": "string" },
     "kmInicial": { "type": "string" },
     "combustivelInicial": { "type": "string" },
-    "manutencaoPreventiva": { "type": "string" },
     "limpeza": { "type": "string" },
     "farol": { "type": "string" },
     "portasMacanetas": { "type": "string" },
