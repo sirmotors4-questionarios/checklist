@@ -23,16 +23,14 @@
 
     <form id="checklistForm" novalidate>
       <section class="card">
-        <div class="section-heading"><span>01</span><div><h3>Identificação</h3><p>Utilizador, viatura e leituras iniciais</p></div></div>
+        <div class="section-heading"><span>01</span><div><h3>Identificação</h3><p>Motorista, viatura e leituras iniciais</p></div></div>
         <div class="grid">
           <label>Data *<input type="date" name="data" required></label>
           <label>Turno *<select name="turno" required><option value="">Seleccionar</option><option>Manhã</option><option>Tarde</option></select></label>
-          <label>Nome do utilizador *<input type="text" name="utilizador" autocomplete="name" required></label>
           <label>Motorista *<select name="motorista" data-list="motoristas" required><option value="">A carregar...</option></select></label>
           <label>Viatura *<select name="viatura" data-list="viaturas" required><option value="">A carregar...</option></select></label>
           <label>Quilometragem actual *<input type="number" name="kmInicial" min="0" step="1" inputmode="numeric" required></label>
           <label>Nível de combustível *<input type="number" name="combustivelInicial" min="0" step="0.01" inputmode="decimal" required></label>
-          <label>Manutenção preventiva nos últimos 20.000 km? *<select name="manutencaoPreventiva" required><option value="">Seleccionar</option><option>SIM</option><option>NÃO</option></select></label>
         </div>
       </section>
 
