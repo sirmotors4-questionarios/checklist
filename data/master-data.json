@@ -1,5 +1,311 @@
 {
-  "actualizadoEm": null,
-  "viaturas": [],
-  "motoristas": []
+  "actualizadoEm": "2026-09-21T14:06:08.5632185Z",
+  "viaturas": [
+    {
+      "codigo": "AOT 435 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 436 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 437 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 438 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 439 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 440 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 441 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 442 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 443 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 444 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 445 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 446 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 453 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 457 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 458 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 478 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 479 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 480 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 481 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 482 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 483 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 484 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 485 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 486 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 487 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 488 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 489 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 490 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 491 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 516 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 517 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 664 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 665 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 666 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 667 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 676 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 684 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 685 MC",
+      "estado": ""
+    },
+    {
+      "codigo": "AOT 686 MC",
+      "estado": ""
+    }
+  ],
+  "motoristas": [
+    {
+      "codigo": "Adriano Dinis Guambe",
+      "estado": ""
+    },
+    {
+      "codigo": "Alberto Mario Bombe",
+      "estado": ""
+    },
+    {
+      "codigo": "Amadio Justino Macuacua",
+      "estado": ""
+    },
+    {
+      "codigo": "Amone Joao Gama",
+      "estado": ""
+    },
+    {
+      "codigo": "Aniceto Paulino Nhacudime",
+      "estado": ""
+    },
+    {
+      "codigo": "Antonio Fernando Nhassengo",
+      "estado": ""
+    },
+    {
+      "codigo": "Antonio Pedro Muianga",
+      "estado": ""
+    },
+    {
+      "codigo": "Antonio Rafael Matola",
+      "estado": ""
+    },
+    {
+      "codigo": "Antonio Simiao Sitoe",
+      "estado": ""
+    },
+    {
+      "codigo": "Arlindo da Gloria",
+      "estado": ""
+    },
+    {
+      "codigo": "Arnaldo Felisberto Nhantumbo",
+      "estado": ""
+    },
+    {
+      "codigo": "Castigo Abel Mucavel",
+      "estado": ""
+    },
+    {
+      "codigo": "Celso Menezes Valentim",
+      "estado": ""
+    },
+    {
+      "codigo": "Cipriano Luis Muassapo",
+      "estado": ""
+    },
+    {
+      "codigo": "Claudio Simeao Mutombene",
+      "estado": ""
+    },
+    {
+      "codigo": "Decio Ernesto Macie",
+      "estado": ""
+    },
+    {
+      "codigo": "Domingos Joao Rafael",
+      "estado": ""
+    },
+    {
+      "codigo": "Edson Laisse",
+      "estado": ""
+    },
+    {
+      "codigo": "Ernesto Jose Tsambe",
+      "estado": ""
+    },
+    {
+      "codigo": "Eurico Filipe Mauaie",
+      "estado": ""
+    },
+    {
+      "codigo": "Fabiao Lucas Matola",
+      "estado": ""
+    },
+    {
+      "codigo": "Fernando Abrao Coana",
+      "estado": ""
+    },
+    {
+      "codigo": "Fernando Nhande",
+      "estado": ""
+    },
+    {
+      "codigo": "Filimao Muianga",
+      "estado": ""
+    },
+    {
+      "codigo": "Florencio Francisco Chauque",
+      "estado": ""
+    },
+    {
+      "codigo": "Helder Paulo Tembe",
+      "estado": ""
+    },
+    {
+      "codigo": "Hilario Cinquenta Mauocuane",
+      "estado": ""
+    },
+    {
+      "codigo": "Joao Antonio Joaquim",
+      "estado": ""
+    },
+    {
+      "codigo": "Joaquim Jaime Ticone",
+      "estado": ""
+    },
+    {
+      "codigo": "Luis Vasco Massango",
+      "estado": ""
+    },
+    {
+      "codigo": "Manuel Antonio Tembe",
+      "estado": ""
+    },
+    {
+      "codigo": "Paulino Nhantumbo",
+      "estado": ""
+    },
+    {
+      "codigo": "Raul Joao Cuinhane",
+      "estado": ""
+    },
+    {
+      "codigo": "Samito Joao Chambela",
+      "estado": ""
+    },
+    {
+      "codigo": "Simoes Joaquim Das Neves",
+      "estado": ""
+    },
+    {
+      "codigo": "Tomas Paulo Cumbane",
+      "estado": ""
+    },
+    {
+      "codigo": "Vidal Joaquim Chissano",
+      "estado": ""
+    }
+  ]
 }
