@@ -270,11 +270,20 @@ function checklistResult() {
 }
 
 function updateResult() {
-  // A avaliação e a classificação só são apresentadas DEPOIS de gravar.
+  // Durante o preenchimento, mostrar as anomalias, mas não antecipar a condição.
   const box = document.querySelector('#resultBox');
+  const resultado = checklistResult();
+  const anomalias = allChecks.filter(([key]) => form.elements[key]?.value === 'NÃO OK');
+  const respondidas = allChecks.filter(([key]) => Boolean(form.elements[key]?.value)).length;
   box.dataset.state = 'PENDENTE';
   document.querySelector('#estadoPreview').textContent = 'PENDENTE';
-  document.querySelector('#incidentPreview').textContent = 'A classificação será apresentada depois do registo.';
+  document.querySelector('#incidentPreview').textContent = anomalias.length
+    ? 'Anomalias identificadas (' + anomalias.length + '): ' + anomalias.map(([,label]) => label).join('; ') +
+      '. A condição e a avaliação técnica serão apresentadas depois do registo.'
+    : respondidas === allChecks.length
+      ? 'Nenhuma anomalia identificada. A condição e a avaliação técnica serão apresentadas depois do registo.'
+      : 'Nenhuma anomalia identificada até ao momento (' + respondidas + '/' + allChecks.length +
+        ' verificações respondidas). A condição e a avaliação técnica serão apresentadas depois do registo.';
 }
 
 function updateProgress() {
