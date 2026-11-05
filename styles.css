@@ -12,3 +12,10 @@
 .resultado-final[data-cor="AMARELO"]{background:#fefce8;border-color:#eab308}
 .resultado-final[data-cor="LARANJA"]{background:#fff7ed;border-color:#ea580c}
 .resultado-final[data-cor="VERMELHO"]{background:#fef2f2;border-color:#dc2626}
+
+/* Configuração local do endpoint, sem expor a assinatura no repositório. */
+.endpoint-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.endpoint-actions .secondary-button{background:#e6edf5;color:#183653}
+.endpoint-note{font-size:.82rem;color:var(--muted);line-height:1.45}
+#apiSettingsStatus{padding:10px;border-radius:8px;background:#fff3dd;color:#7c4200}
+#apiSettings[data-ready="true"] #apiSettingsStatus{background:#e6f7ee;color:#17623d}
