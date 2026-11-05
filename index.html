@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0b5aa8">
   <meta name="description" content="Checklist digital de saída de viaturas da SIR Motors.">
   <title>Checklist de Saída | SIR Motors</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=2">
 </head>
 <body>
   <header class="topbar">
@@ -50,19 +50,19 @@
       </section>
 
       <section class="card">
-        <div class="section-heading"><span>05</span><div><h3>Resultado</h3><p>Resumo automático da inspecção</p></div></div>
-        <div class="result-box" id="resultBox"><strong id="estadoPreview">Pendente</strong><span id="incidentPreview">Complete todas as verificações.</span></div>
+        <div class="section-heading"><span>05</span><div><h3>Resultado</h3><p>A classificação ficará disponível após o registo</p></div></div>
+        <div class="result-box" id="resultBox"><strong id="estadoPreview">Pendente</strong><span id="incidentPreview">A classificação será apresentada depois do registo.</span></div>
         <label class="wide">Observações<textarea name="observacoes" rows="4" placeholder="Descreva anomalias, danos ou informação relevante"></textarea></label>
       </section>
 
       <div class="form-actions"><p id="formHint">Confirme os dados antes de enviar.</p><button type="submit" id="submitButton"><span>Enviar checklist</span><span aria-hidden="true">→</span></button></div>
     </form>
 
-    <section class="success" id="successPanel" hidden aria-live="polite"><div class="success-icon">✓</div><h2>Checklist recebido</h2><p id="successMessage"></p><button type="button" id="newEntry">Novo checklist</button></section>
+    <section class="success" id="successPanel" hidden aria-live="polite"><div class="success-icon">✓</div><h2>Checklist recebido</h2><p id="successMessage"></p><div id="resultadoFinal" class="resultado-final" hidden aria-live="polite"><h3>Condição da viatura</h3><strong id="condicaoFinal"></strong><h3>Avaliação</h3><p id="avaliacaoFinal"></p></div><button type="button" id="newEntry">Novo checklist</button></section>
   </main>
 
   <footer><span>SIR Motors · Operações Rodoviárias</span><span id="dataTimestamp"></span></footer>
   <script src="config.js?v=2"></script>
-  <script src="app.js?v=5"></script>
+  <script src="app.js?v=6"></script>
 </body>
 </html>
