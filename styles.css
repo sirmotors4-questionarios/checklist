@@ -19,3 +19,12 @@
 .endpoint-note{font-size:.82rem;color:var(--muted);line-height:1.45}
 #apiSettingsStatus{padding:10px;border-radius:8px;background:#fff3dd;color:#7c4200}
 #apiSettings[data-ready="true"] #apiSettingsStatus{background:#e6f7ee;color:#17623d}
+
+/* Acções de selecção em lote das verificações */
+.bulk-check-actions{display:flex;flex-wrap:wrap;gap:12px}
+.bulk-check-actions button{min-height:44px;min-width:150px}
+.bulk-check-actions .bulk-good{background:#16834b}
+.bulk-check-actions .bulk-bad{background:#b42318}
+.bulk-check-note,.bulk-feedback{font-size:.86rem;line-height:1.5;color:var(--muted)}
+.bulk-feedback:not(:empty){margin-bottom:0;font-weight:650;color:#344054}
+@media(max-width:520px){.bulk-check-actions{flex-direction:column}.bulk-check-actions button{width:100%}}
