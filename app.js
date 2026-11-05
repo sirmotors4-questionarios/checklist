@@ -3,6 +3,58 @@ const form = document.querySelector('#checklistForm');
 const submitButton = document.querySelector('#submitButton');
 const syncStatus = document.querySelector('#syncStatus');
 const successPanel = document.querySelector('#successPanel');
+const ENDPOINT_STORAGE = 'sirChecklistSubmissionEndpoint';
+const endpointInput = document.querySelector('#submissionEndpoint');
+const endpointStatus = document.querySelector('#apiSettingsStatus');
+const endpointSection = document.querySelector('#apiSettings');
+function savedEndpoint() {
+  try { return localStorage.getItem(ENDPOINT_STORAGE) || ''; } catch { return ''; }
+}
+function validEndpoint(value) {
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase();
+    const allowed = host.endsWith('.environment.api.powerplatform.com') ||
+      host.endsWith('.logic.azure.com') || host.endsWith('.azure-apim.net');
+    return url.protocol === 'https:' && allowed &&
+      url.pathname.includes('/triggers/') && url.pathname.endsWith('/invoke') &&
+      url.searchParams.has('sig') && Boolean(url.searchParams.get('sig'));
+  } catch { return false; }
+}
+function submissionEndpoint() {
+  const privateUrl = savedEndpoint();
+  if (validEndpoint(privateUrl)) return privateUrl;
+  return validEndpoint(config.submissionUrl || '') ? config.submissionUrl : '';
+}
+function refreshEndpointStatus() {
+  const ready = Boolean(submissionEndpoint());
+  endpointSection.dataset.ready = String(ready);
+  endpointStatus.textContent = ready
+    ? 'Ligação configurada. Pode submeter o checklist.'
+    : 'Ligação incompleta. Cole e guarde o URL HTTP completo do gatilho Power Automate antes de enviar.';
+  return ready;
+}
+document.querySelector('#saveSubmissionEndpoint').addEventListener('click', () => {
+  const value = endpointInput.value.trim();
+  if (!validEndpoint(value)) {
+    endpointStatus.textContent = 'URL inválido ou incompleto. Copie o URL HTTP completo do gatilho após guardar o fluxo público.';
+    return;
+  }
+  try {
+    localStorage.setItem(ENDPOINT_STORAGE, value);
+    endpointInput.value = '';
+    refreshEndpointStatus();
+  } catch {
+    endpointStatus.textContent = 'Não foi possível guardar neste navegador; verifique o armazenamento local.';
+  }
+});
+document.querySelector('#clearSubmissionEndpoint').addEventListener('click', () => {
+  try { localStorage.removeItem(ENDPOINT_STORAGE); } catch {}
+  endpointInput.value = '';
+  refreshEndpointStatus();
+});
+refreshEndpointStatus();
+
 
 const groups = {
   geral: [
@@ -238,12 +290,39 @@ form.addEventListener('submit', async event => {
   payload.registadoEm = new Date().toISOString();
   payload.origem = 'web-checklist-saida';
 
+  if (!config.demoMode && !submissionEndpoint()) {
+    refreshEndpointStatus();
+    document.querySelector('#formHint').textContent =
+      'O URL HTTP de envio está incompleto. Configure a ligação ao Power Automate no início da página.';
+    endpointSection.scrollIntoView({behavior:'smooth',block:'start'});
+    return;
+  }
   submitButton.disabled = true;
   submitButton.querySelector('span').textContent = 'A enviar...';
   try {
-    if (config.submissionUrl && !config.demoMode) {
-      const response = await fetch(config.submissionUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      if (!response.ok) throw new Error(`Submissão recusada: ${response.status}`);
+    if (!config.demoMode) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      let response;
+      try {
+        response = await fetch(submissionEndpoint(), {
+          method: 'POST',
+          mode: 'cors',
+          credentials: 'omit',
+          cache: 'no-store',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(payload),
+          signal: controller.signal
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
+      if (!response.ok) {
+        const errorText = (await response.text().catch(() => '')).slice(0,300);
+        console.error('Falha HTTP no fluxo:',response.status,errorText);
+        throw new Error('O fluxo devolveu HTTP ' + response.status +
+          '. Consulte o histórico do Power Automate e os mapeamentos do Excel.');
+      }
     } else {
       const entries = JSON.parse(localStorage.getItem('sirChecklistSaidaDemo') || '[]');
       entries.push(payload);
@@ -259,7 +338,11 @@ form.addEventListener('submit', async event => {
     document.querySelector('#avaliacaoFinal').textContent = classificacao.avaliacao;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (error) {
-    document.querySelector('#formHint').textContent = 'Não foi possível enviar. Confirme a ligação e tente novamente.';
+    console.error('Erro na submissão do checklist:', error.name, error.message);
+    document.querySelector('#formHint').textContent =
+      error.name === 'AbortError' ? 'O fluxo não respondeu em 30 segundos. Confirme no Excel antes de reenviar para evitar duplicações.' :
+      error instanceof TypeError ? 'Erro de rede ou CORS. Verifique o URL HTTP completo, o acesso público do gatilho e a ligação à Internet.' :
+      'Não foi possível enviar: ' + error.message;
   } finally {
     submitButton.disabled = false;
     submitButton.querySelector('span').textContent = 'Enviar checklist';
