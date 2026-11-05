@@ -43,14 +43,14 @@ function checkOptions(key) {
     // Fuga presente é uma anomalia: TEM corresponde a NÃO OK.
     return [
       { label: 'Tem', value: 'NÃO OK', className: 'bad' },
-      { label: 'Não tem', value: 'OK', className: 'ok' },
+      { label: 'Não Tem', value: 'OK', className: 'ok' },
       { label: 'N/A', value: 'N/A', className: 'na' }
     ];
   }
   if (presenceChecks.has(key)) {
     return [
       { label: 'Tem', value: 'OK', className: 'ok' },
-      { label: 'Não tem', value: 'NÃO OK', className: 'bad' },
+      { label: 'Não Tem', value: 'NÃO OK', className: 'bad' },
       { label: 'N/A', value: 'N/A', className: 'na' }
     ];
   }
