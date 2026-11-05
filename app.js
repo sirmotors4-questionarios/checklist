@@ -42,15 +42,15 @@ function checkOptions(key) {
   if (key === 'fugasOleo') {
     // Fuga presente é uma anomalia: TEM corresponde a NÃO OK.
     return [
-      { label: 'Tem', value: 'NÃO OK', className: 'bad' },
-      { label: 'Não Tem', value: 'OK', className: 'ok' },
+      { label: 'TEM', value: 'NÃO OK', className: 'bad' },
+      { label: 'NÃO TEM', value: 'OK', className: 'ok' },
       { label: 'N/A', value: 'N/A', className: 'na' }
     ];
   }
   if (presenceChecks.has(key)) {
     return [
-      { label: 'Tem', value: 'OK', className: 'ok' },
-      { label: 'Não Tem', value: 'NÃO OK', className: 'bad' },
+      { label: 'TEM', value: 'OK', className: 'ok' },
+      { label: 'NÃO TEM', value: 'NÃO OK', className: 'bad' },
       { label: 'N/A', value: 'N/A', className: 'na' }
     ];
   }
