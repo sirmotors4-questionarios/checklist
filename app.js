@@ -35,13 +35,36 @@ const groups = {
 const allChecks = Object.values(groups).flat();
 const normalise = value => String(value ?? '').trim();
 
+// Opções adequadas ao significado da verificação.
+// Os valores enviados mantêm OK/NÃO OK para compatibilidade com o fluxo Excel existente.
+const presenceChecks = new Set(['caixaPrimeirosSocorros', 'coleteReflector', 'triangulos']);
+function checkOptions(key) {
+  if (key === 'fugasOleo') {
+    // Fuga presente é uma anomalia: TEM corresponde a NÃO OK.
+    return [
+      { label: 'Tem', value: 'NÃO OK', className: 'bad' },
+      { label: 'Não tem', value: 'OK', className: 'ok' },
+      { label: 'N/A', value: 'N/A', className: 'na' }
+    ];
+  }
+  if (presenceChecks.has(key)) {
+    return [
+      { label: 'Tem', value: 'OK', className: 'ok' },
+      { label: 'Não tem', value: 'NÃO OK', className: 'bad' },
+      { label: 'N/A', value: 'N/A', className: 'na' }
+    ];
+  }
+  return [
+    { label: 'OK', value: 'OK', className: 'ok' },
+    { label: 'NÃO OK', value: 'NÃO OK', className: 'bad' },
+    { label: 'N/A', value: 'N/A', className: 'na' }
+  ];
+}
 function renderChecks(targetId, items) {
   document.querySelector(`#${targetId}`).innerHTML = items.map(([key, label]) => `
     <fieldset class="check-item">
       <legend>${label} *</legend>
-      <label class="ok"><input type="radio" name="${key}" value="OK" required><span>OK</span></label>
-      <label class="bad"><input type="radio" name="${key}" value="NÃO OK" required><span>NÃO OK</span></label>
-      <label class="na"><input type="radio" name="${key}" value="N/A" required><span>N/A</span></label>
+      ${checkOptions(key).map(option => `<label class="${option.className}"><input type="radio" name="${key}" value="${option.value}" required><span>${option.label}</span></label>`).join('')}
     </fieldset>`).join('');
 }
 
