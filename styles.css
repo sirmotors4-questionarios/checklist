@@ -21,3 +21,6 @@
 .bulk-check-note,.bulk-feedback{font-size:.86rem;line-height:1.5;color:var(--muted)}
 .bulk-feedback:not(:empty){margin-bottom:0;font-weight:650;color:#344054}
 @media(max-width:520px){.bulk-check-actions{flex-direction:column}.bulk-check-actions button{width:100%}}
+
+/* Justificação da classificação organizada em secções legíveis. */
+#avaliacaoFinal{white-space:pre-line;line-height:1.75;font-size:.93rem;text-align:left}
