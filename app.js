@@ -120,6 +120,30 @@ function renderChecks(targetId, items) {
     </fieldset>`).join('');
 }
 
+// Preenchimento rápido: só actualiza os botões de verificação (nunca submete).
+function preencherChecklistEmLote(valor) {
+  const nome = valor === 'OK' ? 'TUDO BEM' : 'TUDO MAU';
+  const confirmado = window.confirm(
+    'Confirma "' + nome + '" para todas as verificações?\\n' +
+    'Esta opção deve reflectir uma inspecção real. Pode corrigir respostas individualmente antes de enviar.'
+  );
+  if (!confirmado) return;
+  let preenchidos = 0;
+  allChecks.forEach(([key]) => {
+    const radio = [...form.querySelectorAll('input[type="radio"]')]
+      .find(input => input.name === key && input.value === valor);
+    if (!radio) return;
+    radio.checked = true;
+    preenchidos++;
+  });
+  updateProgress();
+  document.querySelector('#bulkCheckFeedback').textContent =
+    preenchidos + ' verificações seleccionadas como ' + nome +
+    '. Reveja e corrija as respostas antes do envio.';
+}
+document.querySelector('#markAllGood').addEventListener('click', () => preencherChecklistEmLote('OK'));
+document.querySelector('#markAllBad').addEventListener('click', () => preencherChecklistEmLote('NÃO OK'));
+
 function setToday() {
   const now = new Date();
   const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
@@ -351,6 +375,7 @@ form.addEventListener('submit', async event => {
 
 document.querySelector('#newEntry').addEventListener('click', () => {
   form.reset(); setToday(); form.hidden = false; successPanel.hidden = true;
+  document.querySelector('#bulkCheckFeedback').textContent = '';
   document.querySelector('#resultadoFinal').hidden = true;
   document.querySelector('#formHint').textContent = 'Confirme os dados antes de enviar.';
   updateProgress();
