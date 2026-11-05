@@ -206,16 +206,52 @@ function classificarRegisto() {
     nivel='EXCELENTE'; cor='VERDE';
     decisao='Nenhuma anomalia assinalada; manter as verificações operacionais habituais.';
   }
-  const explicacoes = [
-    anomalias.length ? anomalias.length + ' anomalia(s): ' + anomalias.map(item=>item.label).join(', ') + '.' : 'Sem anomalias assinaladas.',
-    'Índice preliminar de risco: ' + risco.toFixed(1).replace('.',',') + '%.',
-    impeditivas.length ? 'Falha(s) impeditiva(s) de segurança: ' + impeditivas.map(item=>item.label).join(', ') + '.' : '',
-    criticas.length ? 'Elemento(s) crítico(s): ' + criticas.map(item=>item.label).join(', ') + '.' : '',
-    semAplicabilidade.length ? 'N/A em elemento(s) de segurança a confirmar: ' + semAplicabilidade.map(item=>item.label).join(', ') + '.' : '',
-    decisao,
-    'Classificação automática preliminar; não equivale a libertação técnica.'
+  const importantes = anomalias.filter(item =>
+    !CRITERIOS.impeditivos.has(item.key) && !CRITERIOS.criticos.has(item.key) &&
+    CRITERIOS.importantes.has(item.key));
+  const secundarias = anomalias.filter(item => pesoChecklist(item.key) === 1);
+  const resumo = anomalias.length
+    ? anomalias.length + ' de ' + avaliacoes.length + ' verificações com anomalias.'
+    : 'Todas as verificações aplicáveis foram assinaladas como conformes.';
+  const indice = 'Índice ponderado de anomalias: ' +
+    risco.toFixed(1).replace('.', ',') + '% (indicador preliminar, não uma probabilidade de acidente).';
+  function mostrarPrincipais(items, limite = 5) {
+    if (!items.length) return 'Nenhuma.';
+    const restantes = items.length - limite;
+    return items.slice(0, limite).map(item => item.label).join('; ') +
+      (restantes > 0 ? '; e mais ' + restantes + ' elemento(s).' : '.');
+  }
+  const motivos = impeditivas.length
+    ? 'Foram assinaladas ' + impeditivas.length + ' falha(s) em elementos impeditivos de segurança.'
+    : criticas.length
+      ? 'Foram identificadas falhas em elementos críticos, que exigem avaliação técnica.'
+      : risco > 30
+        ? 'A quantidade e o peso das anomalias ultrapassam o limiar de 30%.'
+        : risco > 15
+          ? 'O índice ponderado de anomalias ultrapassa 15%.'
+          : semAplicabilidade.length
+            ? 'Há respostas N/A em equipamentos ou elementos de segurança que exigem confirmação.'
+            : risco > 5
+              ? 'O índice ponderado de anomalias ultrapassa 5%.'
+              : anomalias.length
+                ? 'Existem anomalias de menor peso que exigem acompanhamento.'
+                : 'Não foram identificadas anomalias nas respostas registadas.';
+  const linhas = [
+    'RESUMO: ' + resumo,
+    indice,
+    'PORQUE RECEBEU ESTA CLASSIFICAÇÃO: ' + motivos,
+    impeditivas.length ? 'FALHAS IMPEDITIVAS (' + impeditivas.length + '): ' + mostrarPrincipais(impeditivas) : '',
+    criticas.length ? 'FALHAS CRÍTICAS (' + criticas.length + '): ' + mostrarPrincipais(criticas) : '',
+    importantes.length ? 'OUTRAS FALHAS IMPORTANTES (' + importantes.length + '): ' + mostrarPrincipais(importantes, 4) : '',
+    secundarias.length ? 'ANOMALIAS SECUNDÁRIAS (' + secundarias.length + '): ' + mostrarPrincipais(secundarias, 3) : '',
+    semAplicabilidade.length ? 'VERIFICAÇÕES N/A A CONFIRMAR: ' + mostrarPrincipais(semAplicabilidade, 4) : '',
+    'DECISÃO RECOMENDADA: ' + decisao,
+    anomalias.length || semAplicabilidade.length
+      ? 'PRÓXIMO PASSO: Comunicar as anomalias à supervisão e à oficina, confirmar a gravidade e registar a decisão técnica.'
+      : 'PRÓXIMO PASSO: Concluir os procedimentos habituais de libertação operacional.',
+    'NOTA: Avaliação automática preliminar, baseada nas respostas do checklist. Não constitui autorização técnica de circulação.'
   ].filter(Boolean);
-  return {condicao: nivel + ' (' + cor + ')', nivel, cor, avaliacao: explicacoes.join(' ')};
+  return {condicao: nivel + ' (' + cor + ')', nivel, cor, avaliacao: linhas.join('\\n')};
 }
 
 function checklistResult() {
