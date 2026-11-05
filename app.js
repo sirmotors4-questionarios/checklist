@@ -3,58 +3,10 @@ const form = document.querySelector('#checklistForm');
 const submitButton = document.querySelector('#submitButton');
 const syncStatus = document.querySelector('#syncStatus');
 const successPanel = document.querySelector('#successPanel');
-const ENDPOINT_STORAGE = 'sirChecklistSubmissionEndpoint';
-const endpointInput = document.querySelector('#submissionEndpoint');
-const endpointStatus = document.querySelector('#apiSettingsStatus');
-const endpointSection = document.querySelector('#apiSettings');
-function savedEndpoint() {
-  try { return localStorage.getItem(ENDPOINT_STORAGE) || ''; } catch { return ''; }
-}
-function validEndpoint(value) {
-  try {
-    const url = new URL(value);
-    const host = url.hostname.toLowerCase();
-    const allowed = host.endsWith('.environment.api.powerplatform.com') ||
-      host.endsWith('.logic.azure.com') || host.endsWith('.azure-apim.net');
-    return url.protocol === 'https:' && allowed &&
-      url.pathname.includes('/triggers/') && url.pathname.endsWith('/invoke') &&
-      url.searchParams.has('sig') && Boolean(url.searchParams.get('sig'));
-  } catch { return false; }
-}
+// O único endereço de submissão é o definido em config.js.
 function submissionEndpoint() {
-  const privateUrl = savedEndpoint();
-  if (validEndpoint(privateUrl)) return privateUrl;
-  return validEndpoint(config.submissionUrl || '') ? config.submissionUrl : '';
+  return String(config.submissionUrl || '').trim();
 }
-function refreshEndpointStatus() {
-  const ready = Boolean(submissionEndpoint());
-  endpointSection.dataset.ready = String(ready);
-  endpointStatus.textContent = ready
-    ? 'Ligação configurada. Pode submeter o checklist.'
-    : 'Ligação incompleta. Cole e guarde o URL HTTP completo do gatilho Power Automate antes de enviar.';
-  return ready;
-}
-document.querySelector('#saveSubmissionEndpoint').addEventListener('click', () => {
-  const value = endpointInput.value.trim();
-  if (!validEndpoint(value)) {
-    endpointStatus.textContent = 'URL inválido ou incompleto. Copie o URL HTTP completo do gatilho após guardar o fluxo público.';
-    return;
-  }
-  try {
-    localStorage.setItem(ENDPOINT_STORAGE, value);
-    endpointInput.value = '';
-    refreshEndpointStatus();
-  } catch {
-    endpointStatus.textContent = 'Não foi possível guardar neste navegador; verifique o armazenamento local.';
-  }
-});
-document.querySelector('#clearSubmissionEndpoint').addEventListener('click', () => {
-  try { localStorage.removeItem(ENDPOINT_STORAGE); } catch {}
-  endpointInput.value = '';
-  refreshEndpointStatus();
-});
-refreshEndpointStatus();
-
 
 const groups = {
   geral: [
@@ -315,10 +267,8 @@ form.addEventListener('submit', async event => {
   payload.origem = 'web-checklist-saida';
 
   if (!config.demoMode && !submissionEndpoint()) {
-    refreshEndpointStatus();
     document.querySelector('#formHint').textContent =
-      'O URL HTTP de envio está incompleto. Configure a ligação ao Power Automate no início da página.';
-    endpointSection.scrollIntoView({behavior:'smooth',block:'start'});
+      'Ligação não configurada no ficheiro config.js. Contacte o administrador.';
     return;
   }
   submitButton.disabled = true;
