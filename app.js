@@ -206,58 +206,67 @@ function classificarRegisto() {
     nivel='EXCELENTE'; cor='VERDE';
     decisao='Nenhuma anomalia assinalada; manter as verificações operacionais habituais.';
   }
-  const importantes = anomalias.filter(item =>
-    !CRITERIOS.impeditivos.has(item.key) && !CRITERIOS.criticos.has(item.key) &&
-    CRITERIOS.importantes.has(item.key));
-  const secundarias = anomalias.filter(item => pesoChecklist(item.key) === 1);
-  const resumo = anomalias.length
-    ? anomalias.length + ' de ' + avaliacoes.length + ' verificações com anomalias.'
-    : 'Todas as verificações aplicáveis foram assinaladas como conformes.';
-  const indice = 'Índice ponderado de anomalias: ' +
-    risco.toFixed(1).replace('.', ',') + '% (indicador preliminar, não uma probabilidade de acidente).';
-  function mostrarPrincipais(items, limite = 5) {
-    if (!items.length) return 'Nenhuma.';
-    const restantes = items.length - limite;
-    return items.slice(0, limite).map(item => item.label).join('; ') +
-      (restantes > 0 ? '; e mais ' + restantes + ' elemento(s).' : '.');
-  }
-  const motivos = impeditivas.length
-    ? 'Foram assinaladas ' + impeditivas.length + ' falha(s) em elementos impeditivos de segurança.'
-    : criticas.length
-      ? 'Foram identificadas falhas em elementos críticos, que exigem avaliação técnica.'
-      : risco > 30
-        ? 'A quantidade e o peso das anomalias ultrapassam o limiar de 30%.'
-        : risco > 15
-          ? 'O índice ponderado de anomalias ultrapassa 15%.'
-          : semAplicabilidade.length
-            ? 'Há respostas N/A em equipamentos ou elementos de segurança que exigem confirmação.'
-            : risco > 5
-              ? 'O índice ponderado de anomalias ultrapassa 5%.'
-              : anomalias.length
-                ? 'Existem anomalias de menor peso que exigem acompanhamento.'
-                : 'Não foram identificadas anomalias nas respostas registadas.';
+  // A coluna Incidente regista TODOS os itens não conformes. A Avaliação explica
+  // tecnicamente a quantidade, a consequência possível e o encaminhamento.
+  const familias = [
+    { nome:'Travagem e segurança activa',
+      itens:['travoes','balatas','calcos','nivelOleoTravoes','sistemaAbs'],
+      descricao:'Respostas desfavoráveis nestes componentes podem comprometer a eficácia da travagem, a estabilidade ou o controlo da viatura. É indispensável inspecção técnica antes da circulação.' },
+    { nome:'Pneus e contacto com o pavimento',
+      itens:['estadoPneus','pneuFrentePassageiro','pneuFrenteMotorista','pneuTraseiroPassageiro','pneuTraseiroMotorista'],
+      descricao:'As não conformidades podem prejudicar aderência, estabilidade e capacidade de travagem, exigindo verificação do estado, desgaste e pressão dos pneus.' },
+    { nome:'Direcção, transmissão e mecânica',
+      itens:['nivelOleoDireccao','rolamentos','caixaVelocidades','escape'],
+      descricao:'As anomalias assinaladas podem afectar o controlo, a transmissão de potência ou a fiabilidade mecânica. A natureza e a gravidade da falha devem ser confirmadas pela oficina.' },
+    { nome:'Lubrificação e arrefecimento',
+      itens:['fugasOleo','nivelAguaRadiador'],
+      descricao:'Uma fuga de óleo ou nível inadequado de líquido de arrefecimento pode provocar perda de fluidos, aquecimento excessivo ou danos mecânicos; é necessária verificação da origem e extensão.' },
+    { nome:'Visibilidade, iluminação e sinalização',
+      itens:['farol','refletores','luzesTravao','luzesRetaguarda','luzesPresenca','luzesMinimos','luzesMedios','luzesMaximos','luzesNevoeiro','buzina','pirilampos','limpaParaBrisas','retrovisoresExternos','espelhoInterior','vidros'],
+      descricao:'Estas deficiências podem reduzir a visibilidade do condutor ou a percepção da viatura por terceiros, sobretudo em condições nocturnas ou meteorológicas adversas.' },
+    { nome:'Protecção de passageiros e equipamentos de emergência',
+      itens:['portasMacanetas','cintosSeguranca','caixaPrimeirosSocorros','extintor','coleteReflector','triangulos'],
+      descricao:'A ausência ou deficiência destes elementos pode comprometer a protecção dos ocupantes, o acesso seguro ou a resposta a emergências; deve ser verificada a sua conformidade.' },
+    { nome:'Conservação, conforto e operação',
+      itens:['limpeza','chaparia','nivelLiquidoVidros','bateria','arCondicionado','placas','tampaCombustivel'],
+      descricao:'Estas anomalias podem afectar o conforto, a apresentação, a fiabilidade ou requisitos operacionais, consoante a sua natureza e extensão.' }
+  ];
+  const gruposAfectados = familias.map(familia => {
+    const afectados = anomalias.filter(item => familia.itens.includes(item.key));
+    return afectados.length ? { ...familia, quantidade:afectados.length } : null;
+  }).filter(Boolean);
+  const conhecidos = new Set(familias.flatMap(f => f.itens));
+  const outros = anomalias.filter(item => !conhecidos.has(item.key));
+  const aplicaveis = avaliacoes.filter(item => item.valor !== 'N/A').length;
   const linhas = [
-    'RESUMO: ' + resumo,
-    indice,
-    'PORQUE RECEBEU ESTA CLASSIFICAÇÃO: ' + motivos,
-    impeditivas.length ? 'FALHAS IMPEDITIVAS (' + impeditivas.length + '): ' + mostrarPrincipais(impeditivas) : '',
-    criticas.length ? 'FALHAS CRÍTICAS (' + criticas.length + '): ' + mostrarPrincipais(criticas) : '',
-    importantes.length ? 'OUTRAS FALHAS IMPORTANTES (' + importantes.length + '): ' + mostrarPrincipais(importantes, 4) : '',
-    secundarias.length ? 'ANOMALIAS SECUNDÁRIAS (' + secundarias.length + '): ' + mostrarPrincipais(secundarias, 3) : '',
-    semAplicabilidade.length ? 'VERIFICAÇÕES N/A A CONFIRMAR: ' + mostrarPrincipais(semAplicabilidade, 4) : '',
+    'RESUMO DA INSPECÇÃO: ' + anomalias.length + ' anomalia(s) identificada(s) em ' +
+      aplicaveis + ' verificações aplicáveis (' + avaliacoes.length + ' itens no formulário).',
+    'FUNDAMENTAÇÃO TÉCNICA: ' +
+      (anomalias.length
+        ? 'A classificação ' + nivel + ' resulta da combinação entre a criticidade dos componentes assinalados como não conformes e o índice ponderado de anomalias de ' +
+          risco.toFixed(1).replace('.', ',') + '%. Foram identificadas ' +
+          impeditivas.length + ' não conformidade(s) em elementos de segurança impeditivos e ' +
+          criticas.length + ' em elementos críticos. As respostas do motorista indicam possíveis riscos, mas não constituem diagnóstico técnico definitivo.'
+        : 'Não foram registadas não conformidades nas verificações aplicáveis. O índice ponderado de anomalias é 0%. A ausência de anomalias assinaladas não substitui os procedimentos de verificação e libertação da viatura.'),
+    ...gruposAfectados.map(grupo => grupo.nome.toUpperCase() + ' (' + grupo.quantidade +
+      '): ' + grupo.descricao),
+    outros.length ? 'OUTROS ELEMENTOS (' + outros.length +
+      '): Verificar tecnicamente as não conformidades adicionais assinaladas no campo Incidente.' : '',
+    semAplicabilidade.length ? 'VALIDAÇÃO PENDENTE: ' + semAplicabilidade.length +
+      ' resposta(s) N/A em elementos de segurança ou emergência carecem de confirmação da aplicabilidade.' : '',
     'DECISÃO RECOMENDADA: ' + decisao,
     anomalias.length || semAplicabilidade.length
-      ? 'PRÓXIMO PASSO: Comunicar as anomalias à supervisão e à oficina, confirmar a gravidade e registar a decisão técnica.'
-      : 'PRÓXIMO PASSO: Concluir os procedimentos habituais de libertação operacional.',
-    'NOTA: Avaliação automática preliminar, baseada nas respostas do checklist. Não constitui autorização técnica de circulação.'
+      ? 'ENCAMINHAMENTO: Comunicar o registo à Supervisão de Operações e à Oficina. A equipa técnica deve confirmar os defeitos, definir medidas correctivas e documentar a autorização ou a proibição de circulação.'
+      : 'ENCAMINHAMENTO: Prosseguir com os procedimentos normais de controlo e autorização de saída.',
+    'NOTA: Classificação preliminar automática; não equivale a diagnóstico, aprovação técnica ou autorização de circulação.'
   ].filter(Boolean);
-  return {condicao: nivel + ' (' + cor + ')', nivel, cor, avaliacao: linhas.join('\\n')};
+  return {condicao: nivel + ' (' + cor + ')', nivel, cor, avaliacao: linhas.join('\n')};
 }
 
 function checklistResult() {
   const failed = allChecks.filter(([key]) => form.elements[key]?.value === 'NÃO OK').map(([, label]) => label);
   const answered = allChecks.filter(([key]) => form.elements[key]?.value).length;
-  return { estado: answered === allChecks.length ? (failed.length ? 'NÃO APTO' : 'APTO') : 'PENDENTE', incidente: failed.join('; ') };
+  return { estado: answered === allChecks.length ? (failed.length ? 'NÃO APTO' : 'APTO') : 'PENDENTE', incidente: failed.length ? failed.join('; ') : 'Sem anomalias identificadas' };
 }
 
 function updateResult() {
