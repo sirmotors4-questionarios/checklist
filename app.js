@@ -116,6 +116,80 @@ function escapeHtml(value) {
   return normalise(value).replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[char]));
 }
 
+// Classificação preliminar calculada exclusivamente para o registo concluído.
+// Critérios de triagem, não substituem a avaliação técnica ou autorização de saída.
+const CRITERIOS = {
+  impeditivos: new Set([
+    'travoes','balatas','calcos','sistemaAbs','cintosSeguranca',
+    'estadoPneus','pneuFrentePassageiro','pneuFrenteMotorista',
+    'pneuTraseiroPassageiro','pneuTraseiroMotorista','nivelOleoTravoes'
+  ]),
+  criticos: new Set([
+    'nivelOleoDireccao','fugasOleo','portasMacanetas','luzesTravao',
+    'caixaVelocidades','rolamentos','nivelAguaRadiador'
+  ]),
+  importantes: new Set([
+    'farol','refletores','nivelLiquidoVidros','bateria','luzesRetaguarda',
+    'luzesPresenca','luzesMinimos','luzesMedios','luzesMaximos',
+    'luzesNevoeiro','placas','buzina','pirilampos','limpaParaBrisas',
+    'retrovisoresExternos','caixaPrimeirosSocorros','extintor',
+    'coleteReflector','triangulos','espelhoInterior','tampaCombustivel',
+    'vidros','escape'
+  ])
+};
+function pesoChecklist(key) {
+  if (CRITERIOS.impeditivos.has(key) || CRITERIOS.criticos.has(key)) return 5;
+  if (CRITERIOS.importantes.has(key)) return 3;
+  return 1;
+}
+function classificarRegisto() {
+  const avaliacoes = allChecks.map(([key,label]) => ({
+    key,label,valor: form.elements[key]?.value || '',peso: pesoChecklist(key)
+  }));
+  if (avaliacoes.some(item => !item.valor)) {
+    return { condicao:'PENDENTE', cor:'CINZENTO', avaliacao:'Inspecção incompleta. Não existe classificação de saída.' };
+  }
+  const anomalias = avaliacoes.filter(item => item.valor === 'NÃO OK');
+  // N/A em equipamentos de segurança exige avaliação, não é aprovação automática.
+  const semAplicabilidade = avaliacoes.filter(item => item.valor === 'N/A' && (
+    CRITERIOS.impeditivos.has(item.key) || CRITERIOS.criticos.has(item.key) ||
+    ['extintor','caixaPrimeirosSocorros','coleteReflector','triangulos'].includes(item.key)
+  ));
+  const base = avaliacoes.filter(item => item.valor !== 'N/A');
+  const totalPesos = base.reduce((sum,item)=>sum+item.peso,0);
+  const pesosAnomalias = anomalias.reduce((sum,item)=>sum+item.peso,0);
+  const risco = totalPesos ? 100 * pesosAnomalias / totalPesos : 0;
+  const impeditivas = anomalias.filter(item=>CRITERIOS.impeditivos.has(item.key));
+  const criticas = anomalias.filter(item=>CRITERIOS.criticos.has(item.key));
+  let nivel, cor, decisao;
+  if (impeditivas.length || risco > 30) {
+    nivel='INOPERACIONAL'; cor='VERMELHO';
+    decisao='Não autorizar a saída; encaminhar para verificação técnica e imobilização quando aplicável.';
+  } else if (criticas.length || risco > 15) {
+    nivel='CRÍTICO'; cor='LARANJA';
+    decisao='Não autorizar a saída até avaliação e resolução técnica.';
+  } else if (semAplicabilidade.length || risco > 5) {
+    nivel='ATENÇÃO'; cor='AMARELO';
+    decisao='Saída condicionada a avaliação e autorização técnica.';
+  } else if (anomalias.length) {
+    nivel='OPERACIONAL'; cor='VERDE-CLARO';
+    decisao='Anomalias ligeiras identificadas; registar acompanhamento e confirmar condições de saída.';
+  } else {
+    nivel='EXCELENTE'; cor='VERDE';
+    decisao='Nenhuma anomalia assinalada; manter as verificações operacionais habituais.';
+  }
+  const explicacoes = [
+    anomalias.length ? anomalias.length + ' anomalia(s): ' + anomalias.map(item=>item.label).join(', ') + '.' : 'Sem anomalias assinaladas.',
+    'Índice preliminar de risco: ' + risco.toFixed(1).replace('.',',') + '%.',
+    impeditivas.length ? 'Falha(s) impeditiva(s) de segurança: ' + impeditivas.map(item=>item.label).join(', ') + '.' : '',
+    criticas.length ? 'Elemento(s) crítico(s): ' + criticas.map(item=>item.label).join(', ') + '.' : '',
+    semAplicabilidade.length ? 'N/A em elemento(s) de segurança a confirmar: ' + semAplicabilidade.map(item=>item.label).join(', ') + '.' : '',
+    decisao,
+    'Classificação automática preliminar; não equivale a libertação técnica.'
+  ].filter(Boolean);
+  return {condicao: nivel + ' (' + cor + ')', nivel, cor, avaliacao: explicacoes.join(' ')};
+}
+
 function checklistResult() {
   const failed = allChecks.filter(([key]) => form.elements[key]?.value === 'NÃO OK').map(([, label]) => label);
   const answered = allChecks.filter(([key]) => form.elements[key]?.value).length;
@@ -123,11 +197,11 @@ function checklistResult() {
 }
 
 function updateResult() {
-  const { estado, incidente } = checklistResult();
+  // A avaliação e a classificação só são apresentadas DEPOIS de gravar.
   const box = document.querySelector('#resultBox');
-  box.dataset.state = estado;
-  document.querySelector('#estadoPreview').textContent = estado === 'NÃO APTO' ? 'Não apto para saída' : estado === 'APTO' ? 'Apto para saída' : 'Pendente';
-  document.querySelector('#incidentPreview').textContent = incidente || (estado === 'APTO' ? 'Nenhuma anomalia identificada.' : 'Complete todas as verificações.');
+  box.dataset.state = 'PENDENTE';
+  document.querySelector('#estadoPreview').textContent = 'PENDENTE';
+  document.querySelector('#incidentPreview').textContent = 'A classificação será apresentada depois do registo.';
 }
 
 function updateProgress() {
@@ -156,6 +230,9 @@ form.addEventListener('submit', async event => {
 
   const payload = Object.fromEntries(new FormData(form).entries());
   const result = checklistResult();
+  const classificacao = classificarRegisto();
+  payload['Condição'] = classificacao.condicao;
+  payload['Avaliação'] = classificacao.avaliacao;
   payload.estado = result.estado;
   payload.incidente = result.incidente;
   payload.registadoEm = new Date().toISOString();
@@ -174,7 +251,12 @@ form.addEventListener('submit', async event => {
     }
     form.hidden = true;
     successPanel.hidden = false;
-    document.querySelector('#successMessage').textContent = config.demoMode ? 'Modo de demonstração: o checklist ficou guardado neste dispositivo.' : 'O checklist foi registado na base operacional.';
+    document.querySelector('#successMessage').textContent = config.demoMode ? 'Modo de demonstração: registo guardado neste dispositivo.' : 'Checklist enviado ao sistema.';
+    const resultadoFinal = document.querySelector('#resultadoFinal');
+    resultadoFinal.hidden = false;
+    resultadoFinal.dataset.cor = classificacao.cor;
+    document.querySelector('#condicaoFinal').textContent = classificacao.condicao;
+    document.querySelector('#avaliacaoFinal').textContent = classificacao.avaliacao;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (error) {
     document.querySelector('#formHint').textContent = 'Não foi possível enviar. Confirme a ligação e tente novamente.';
@@ -186,6 +268,7 @@ form.addEventListener('submit', async event => {
 
 document.querySelector('#newEntry').addEventListener('click', () => {
   form.reset(); setToday(); form.hidden = false; successPanel.hidden = true;
+  document.querySelector('#resultadoFinal').hidden = true;
   document.querySelector('#formHint').textContent = 'Confirme os dados antes de enviar.';
   updateProgress();
 });
