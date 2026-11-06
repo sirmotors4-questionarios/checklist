@@ -61,7 +61,6 @@ function guardarUtilizador(nome) {
   actualizarUtilizadores();
 }
 utilizadorSelect.addEventListener('change', mostrarOutroUtilizador);
-actualizarUtilizadores();
 
 const groups = {
   geral: [
@@ -529,6 +528,7 @@ document.querySelector('#newEntry').addEventListener('click', () => {
 renderChecks('geralChecks', groups.geral);
 renderChecks('mecanicaChecks', groups.mecanica);
 renderChecks('pneusChecks', groups.pneus);
+actualizarUtilizadores();
 setToday();
 loadMasterData();
 actualizarManutencao();
