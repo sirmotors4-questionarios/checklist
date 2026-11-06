@@ -8,6 +8,61 @@ function submissionEndpoint() {
   return String(config.submissionUrl || '').trim();
 }
 
+// Selecção dinâmica do responsável pelo preenchimento.
+// A lista local é complementada pelos nomes presentes nos dados mestre, quando disponíveis.
+const utilizadorSelect = document.querySelector('#utilizadorSelect');
+const outroUtilizador = document.querySelector('#outroUtilizador');
+const outroUtilizadorLabel = document.querySelector('#outroUtilizadorLabel');
+const UTILIZADORES_KEY = 'sirChecklistUtilizadores';
+let utilizadoresMaster = [];
+function utilizadoresLocais() {
+  try {
+    const valor = JSON.parse(localStorage.getItem(UTILIZADORES_KEY) || '[]');
+    return Array.isArray(valor) ? valor.filter(x => typeof x === 'string') : [];
+  } catch { return []; }
+}
+function nomeDeUtilizador(item) {
+  if (typeof item === 'string') return item.trim();
+  return String(item?.nome || item?.Nome || item?.utilizador || item?.Utilizador ||
+    item?.['Responsável'] || item?.codigo || '').trim();
+}
+function mostrarOutroUtilizador() {
+  const outro = utilizadorSelect.value === '__outro__';
+  outroUtilizadorLabel.hidden = !outro;
+  outroUtilizador.disabled = !outro;
+  outroUtilizador.required = outro;
+  if (!outro) outroUtilizador.classList.remove('invalid');
+  updateProgress();
+}
+function actualizarUtilizadores() {
+  const anterior = utilizadorSelect.value;
+  const unicos = [...new Map([...utilizadoresMaster, ...utilizadoresLocais()]
+    .map(nomeDeUtilizador)
+    .filter(nome => nome && nome.toLocaleLowerCase('pt') !== 'outro')
+    .map(nome => [nome.toLocaleLowerCase('pt'),nome])).values()]
+    .sort((a,b) => a.localeCompare(b,'pt'));
+  utilizadorSelect.replaceChildren(
+    new Option('OUTRO — indicar nome','__outro__'),
+    ...unicos.map(nome => new Option(nome,nome))
+  );
+  utilizadorSelect.value = unicos.includes(anterior) ? anterior : '__outro__';
+  mostrarOutroUtilizador();
+}
+function utilizadorEscolhido() {
+  return (utilizadorSelect.value === '__outro__' ? outroUtilizador.value : utilizadorSelect.value).trim();
+}
+function guardarUtilizador(nome) {
+  try {
+    const nomes = [...utilizadoresLocais(), nome].map(x => x.trim()).filter(Boolean);
+    localStorage.setItem(UTILIZADORES_KEY, JSON.stringify(
+      [...new Map(nomes.map(x=>[x.toLocaleLowerCase('pt'),x])).values()]
+    ));
+  } catch (error) { console.warn('Lista local de responsáveis não disponível.',error); }
+  actualizarUtilizadores();
+}
+utilizadorSelect.addEventListener('change', mostrarOutroUtilizador);
+actualizarUtilizadores();
+
 const groups = {
   geral: [
     ['limpeza', 'Limpeza'], ['farol', 'Faróis'], ['portasMacanetas', 'Portas e maçanetas'],
@@ -195,6 +250,9 @@ async function loadMasterData() {
     fillSelect('viaturas', data.viaturas);
     actualizarManutencao();
     fillSelect('motoristas', data.motoristas);
+    const listaUtilizadores = data.utilizadores || data.responsaveis || data.responsaveisPreenchimento || [];
+    utilizadoresMaster = Array.isArray(listaUtilizadores) ? listaUtilizadores : [];
+    actualizarUtilizadores();
     const updated = data.actualizadoEm ? new Date(data.actualizadoEm) : new Date();
     document.querySelector('#dataTimestamp').textContent = `Listas actualizadas: ${new Intl.DateTimeFormat('pt-MZ', { dateStyle: 'short', timeStyle: 'short' }).format(updated)}`;
     syncStatus.className = 'sync online';
@@ -376,7 +434,17 @@ form.addEventListener('submit', async event => {
     return;
   }
 
+  const nomeResponsavel = utilizadorEscolhido();
+  if (!nomeResponsavel) {
+    outroUtilizador.classList.add('invalid');
+    outroUtilizador.focus();
+    document.querySelector('#formHint').textContent = 'Indique o nome do responsável pelo preenchimento.';
+    return;
+  }
   const payload = Object.fromEntries(new FormData(form).entries());
+  delete payload.utilizadorEscolha;
+  delete payload.utilizadorNovo;
+  payload.utilizador = nomeResponsavel;
   const result = checklistResult();
   const classificacao = classificarRegisto();
   payload['Condição'] = classificacao.condicao;
@@ -425,6 +493,7 @@ form.addEventListener('submit', async event => {
       entries.push(payload);
       localStorage.setItem('sirChecklistSaidaDemo', JSON.stringify(entries));
     }
+    guardarUtilizador(nomeResponsavel);
     form.hidden = true;
     successPanel.hidden = false;
     document.querySelector('#successMessage').textContent = config.demoMode ? 'Modo de demonstração: registo guardado neste dispositivo.' : 'Checklist enviado ao sistema.';
@@ -448,6 +517,8 @@ form.addEventListener('submit', async event => {
 
 document.querySelector('#newEntry').addEventListener('click', () => {
   form.reset(); setToday(); form.hidden = false; successPanel.hidden = true;
+  outroUtilizador.value = '';
+  actualizarUtilizadores();
   actualizarManutencao();
   document.querySelector('#bulkCheckFeedback').textContent = '';
   document.querySelector('#resultadoFinal').hidden = true;
