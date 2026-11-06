@@ -36,6 +36,64 @@ const groups = {
   ]
 };
 
+
+// A manutenção é calculada a partir da última manutenção efectivamente
+// confirmada na base de viaturas, nunca por múltiplos de 20.000 km do odómetro.
+const INTERVALO_MANUTENCAO_KM = 20000;
+const ALERTA_MANUTENCAO_KM = Number.isFinite(Number(config.maintenanceAlertKm))
+  ? Math.max(0, Number(config.maintenanceAlertKm)) : 1000;
+const manutencoesViaturas = new Map();
+const kmManutencaoKeys = [
+  'kmUltimaManutencaoPreventiva','KM_Ultima_Manutencao_Preventiva',
+  'Km_Ultima_Manutencao_Preventiva','KM Última Manutenção Preventiva',
+  'km_ultima_manutencao_preventiva','kmUltimaManutencao',
+  'Km_Ultima_Manutencao','ultimaManutencaoKm'
+];
+function valorKmConfirmado(item) {
+  if (!item || typeof item !== 'object') return null;
+  for (const key of kmManutencaoKeys) {
+    if (item[key] === null || item[key] === undefined || String(item[key]).trim() === '') continue;
+    const raw = String(item[key]).trim().replace(/\s/g,'').replace(',', '.');
+    if (!/^\d+(?:\.\d+)?$/.test(raw)) continue;
+    const valor = Number(raw);
+    if (Number.isFinite(valor) && valor >= 0) return valor;
+  }
+  return null;
+}
+function calcularManutencao() {
+  const viatura = form.elements.viatura.value;
+  const rawKm = form.elements.kmInicial.value;
+  const kmActual = rawKm === '' ? null : Number(rawKm);
+  const ultimoKm = manutencoesViaturas.get(viatura);
+  if (!viatura || kmActual === null || !Number.isFinite(kmActual) || kmActual < 0) {
+    return {estado:'SEM DADOS',detalhe:'Seleccione a viatura e preencha a quilometragem actual.'};
+  }
+  if (ultimoKm === undefined || ultimoKm === null) {
+    return {estado:'SEM DADOS',detalhe:'Sem quilometragem da última manutenção preventiva confirmada para esta viatura. A oficina deve actualizar os dados mestre.'};
+  }
+  if (kmActual < ultimoKm) {
+    return {estado:'VERIFICAR DADOS',detalhe:'O odómetro indicado é inferior ao da última manutenção preventiva registada. Verifique os dados antes de usar esta avaliação.'};
+  }
+  const proximoKm = ultimoKm + INTERVALO_MANUTENCAO_KM;
+  const faltaKm = proximoKm - kmActual;
+  const formato = valor => new Intl.NumberFormat('pt-MZ',{maximumFractionDigits:0}).format(valor);
+  const detalhe = 'Última preventiva: ' + formato(ultimoKm) +
+    ' km. Próxima prevista: ' + formato(proximoKm) +
+    ' km. ' + (faltaKm > 0 ? 'Faltam ' + formato(faltaKm) + ' km.' :
+    'Prazo ultrapassado em ' + formato(Math.abs(faltaKm)) + ' km.');
+  const estado = faltaKm <= 0 ? 'VENCIDA' :
+    faltaKm <= ALERTA_MANUTENCAO_KM ? 'PRÓXIMA' : 'EM DIA';
+  return {estado, detalhe};
+}
+function actualizarManutencao() {
+  const resultado = calcularManutencao();
+  document.querySelector('#maintenanceStatus').textContent = resultado.estado;
+  document.querySelector('#maintenanceStatus').dataset.status = resultado.estado;
+  document.querySelector('#maintenanceInfo').textContent = resultado.detalhe;
+}
+form.elements.viatura.addEventListener('change', actualizarManutencao);
+form.elements.kmInicial.addEventListener('input', actualizarManutencao);
+
 const allChecks = Object.values(groups).flat();
 const normalise = value => String(value ?? '').trim();
 
@@ -127,7 +185,15 @@ async function loadMasterData() {
     const response = await fetch(`${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}`, { cache: 'no-store' });
     if (!response.ok) throw new Error('Listas indisponíveis');
     const data = await response.json();
+    manutencoesViaturas.clear();
+    for (const item of (Array.isArray(data.viaturas) ? data.viaturas : [])) {
+      if (!item || typeof item !== 'object') continue;
+      const id = displayValue(item,'viaturas');
+      const ultimoKm = valorKmConfirmado(item);
+      if (id && ultimoKm !== null) manutencoesViaturas.set(id,ultimoKm);
+    }
     fillSelect('viaturas', data.viaturas);
+    actualizarManutencao();
     fillSelect('motoristas', data.motoristas);
     const updated = data.actualizadoEm ? new Date(data.actualizadoEm) : new Date();
     document.querySelector('#dataTimestamp').textContent = `Listas actualizadas: ${new Intl.DateTimeFormat('pt-MZ', { dateStyle: 'short', timeStyle: 'short' }).format(updated)}`;
@@ -315,6 +381,9 @@ form.addEventListener('submit', async event => {
   const classificacao = classificarRegisto();
   payload['Condição'] = classificacao.condicao;
   payload['Avaliação'] = classificacao.avaliacao;
+  // O campo "utilizador" é enviado pelo FormData para a coluna Utilizador.
+  const manutencao = calcularManutencao();
+  payload['Manutenção Preventiva'] = manutencao.estado;
   payload.estado = result.estado;
   payload.incidente = result.incidente;
   payload.registadoEm = new Date().toISOString();
@@ -379,6 +448,7 @@ form.addEventListener('submit', async event => {
 
 document.querySelector('#newEntry').addEventListener('click', () => {
   form.reset(); setToday(); form.hidden = false; successPanel.hidden = true;
+  actualizarManutencao();
   document.querySelector('#bulkCheckFeedback').textContent = '';
   document.querySelector('#resultadoFinal').hidden = true;
   document.querySelector('#formHint').textContent = 'Confirme os dados antes de enviar.';
@@ -390,4 +460,5 @@ renderChecks('mecanicaChecks', groups.mecanica);
 renderChecks('pneusChecks', groups.pneus);
 setToday();
 loadMasterData();
+actualizarManutencao();
 updateProgress();
