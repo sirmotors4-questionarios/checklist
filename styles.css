@@ -33,3 +33,6 @@
 #maintenanceStatus[data-status="EM DIA"]{background:#dcfce7;color:#166534}
 #maintenanceStatus[data-status="PRÓXIMA"]{background:#fef3c7;color:#92400e}
 #maintenanceStatus[data-status="VENCIDA"]{background:#fee2e2;color:#991b1b}
+
+/* O nome adicional só aparece ao seleccionar OUTRO. */
+#outroUtilizadorLabel[hidden]{display:none!important}
