@@ -36,3 +36,8 @@
 
 /* O nome adicional só aparece ao seleccionar OUTRO. */
 #outroUtilizadorLabel[hidden]{display:none!important}
+
+/* Responsável e opção OUTRO na mesma coluna. */
+.utilizador-group{min-width:0;display:flex;flex-direction:column}
+.utilizador-group #outroUtilizadorLabel{display:block;margin-top:13px}
+.utilizador-group #outroUtilizadorLabel[hidden]{display:none!important}
