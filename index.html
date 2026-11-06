@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0b5aa8">
   <meta name="description" content="Checklist digital de saída de viaturas da SIR Motors.">
   <title>Checklist de Saída | SIR Motors</title>
-  <link rel="stylesheet" href="styles.css?v=8">
+  <link rel="stylesheet" href="styles.css?v=9">
 </head>
 <body>
   <header class="topbar">
@@ -40,11 +40,6 @@
           <label>Viatura *<select name="viatura" data-list="viaturas" required><option value="">A carregar...</option></select></label>
           <label>Quilometragem actual *<input type="number" name="kmInicial" min="0" step="1" inputmode="numeric" required></label>
           <label>Nível de combustível *<input type="number" name="combustivelInicial" min="0" step="0.01" inputmode="decimal" required></label>
-          <div class="maintenance-preview wide" role="status" aria-live="polite">
-            <strong>Manutenção preventiva (20.000 km)</strong>
-            <span id="maintenanceStatus" data-status="SEM DADOS">SEM DADOS</span>
-            <p id="maintenanceInfo">Seleccione a viatura e indique a quilometragem actual. O cálculo requer a quilometragem da última manutenção preventiva confirmada.</p>
-          </div>
         </div>
       </section>
 
@@ -87,6 +82,6 @@
 
   <footer><span>SIR Motors · Operações Rodoviárias</span><span id="dataTimestamp"></span></footer>
   <script src="config.js?v=3"></script>
-  <script src="app.js?v=15"></script>
+  <script src="app.js?v=16"></script>
 </body>
 </html>
